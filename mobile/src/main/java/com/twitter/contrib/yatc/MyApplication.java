@@ -4,13 +4,14 @@ import android.app.Application;
 
 import com.squareup.leakcanary.LeakCanary;
 import com.twitter.contrib.yatc.dagger.AppComponent;
+import com.twitter.contrib.yatc.dagger.AppComponentCreator;
 import com.twitter.contrib.yatc.dagger.DaggerAppComponent;
 import com.twitter.contrib.yatc.dagger.modules.AppModule;
 
 import nl.qbusict.cupboard.CupboardBuilder;
 import nl.qbusict.cupboard.CupboardFactory;
 
-public class MyApplication extends Application {
+public class MyApplication extends Application implements AppComponentCreator {
 
     // TODO register cupboard entities
     static {
@@ -35,4 +36,8 @@ public class MyApplication extends Application {
     }
 
 
+    @Override
+    public AppComponent getComponent() {
+        return appComponent;
+    }
 }

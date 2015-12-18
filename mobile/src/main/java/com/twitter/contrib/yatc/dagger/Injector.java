@@ -16,6 +16,7 @@ public final class Injector {
         throw new IllegalStateException("Context must be an instance of AppComponentCreator!");
     }
 
+    /*
     public static ActivityComponent obtainActivity(Context context) {
         if (context instanceof ActivityComponentCreator) {
             return ((ActivityComponentCreator) context).getComponent();
@@ -23,5 +24,6 @@ public final class Injector {
 
         throw new IllegalStateException("Context must be an instance of ActivityComponentCreator!");
     }
+    */
 
 }
