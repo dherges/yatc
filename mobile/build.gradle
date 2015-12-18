@@ -1,0 +1,76 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'spoon'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "com.twitter.contrib.yatc"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Android support libraries
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.google.android.gms:play-services:8.3.0'
+    compile 'com.android.support:design:23.1.0'
+
+    // Dagger .. A fast dependency injector for Android and Java
+    compile 'javax.annotation:jsr250-api:1.0'
+    compile 'com.google.dagger:dagger:2.0.2'
+    apt 'com.google.dagger:dagger-compiler:2.0.2'
+
+    // LeakCanary .. “A small leak will sink a great ship.” - Benjamin Franklin
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.3.1'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.3.1'
+
+    // Retrofit HTTP/REST client framework
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+    compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+    compile 'com.squareup.retrofit:converter-moshi:2.0.0-beta2'
+    compile 'com.squareup.okhttp:logging-interceptor:2.6.0'
+    testCompile 'com.squareup.okhttp:mockwebserver:2.6.0'
+
+    // https://github.com/square/okio/
+    compile 'com.squareup.okio:okio:1.6.0'
+
+    // Butter Knife .. Field and method binding for Android views which uses annotation processing to generate boilerplate code for you.
+    // compile 'com.jakewharton:butterknife:7.0.1'
+
+    // Timber .. This is a logger with a small, extensible API which provides utility on top of Android's normal Log class.
+    // compile 'com.jakewharton.timber:timber:4.1.0'
+
+    // Magde .. Pixel grid overlays for debugging whether assets are drawing at their native resolution.
+    // debugCompile 'com.jakewharton.madge:madge:1.1.1'
+
+    // Scalpel .. A surgical debugging tool to uncover the layers under your app.
+    // debugCompile 'com.jakewharton.scalpel:scalpel:1.1.1'
+
+    // Cupboard Content Provider Framework
+    compile 'nl.qbusict:cupboard:2.1.4'
+    compile 'nl.littlerobots:cupboard-tools:0.2.0'
+
+    // Testing dependencies
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:1.7.1'
+
+    // Spoon Automated Android Testing
+    androidTestCompile 'com.squareup.spoon:spoon-client:1.1.9'
+
+    wearApp project(':wear')
+}
