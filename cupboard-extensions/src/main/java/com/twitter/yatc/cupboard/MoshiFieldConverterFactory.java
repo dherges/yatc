@@ -1,4 +1,4 @@
-package com.twitter.cupboard;
+package com.twitter.yatc.cupboard;
 
 import com.squareup.moshi.Moshi;
 

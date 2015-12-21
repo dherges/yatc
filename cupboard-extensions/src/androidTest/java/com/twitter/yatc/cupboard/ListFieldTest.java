@@ -1,4 +1,4 @@
-package com.twitter.cupboard;
+package com.twitter.yatc.cupboard;
 
 import android.content.ContentValues;
 import android.database.MatrixCursor;
