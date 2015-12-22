@@ -1,13 +1,17 @@
 package com.twitter.contrib.yatc.http.oauth;
 
+
+import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.URLEncoder;
+
 import retrofit.Call;
+import retrofit.Response;
 import retrofit.Retrofit;
 
 import static org.junit.Assert.*;
@@ -22,25 +26,27 @@ public class OAuth2ServiceTest {
         final OkHttpClient okHttpClient = new OkHttpClient();
         final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
-        okHttpClient.interceptors().add(logging);
+        okHttpClient.networkInterceptors().add(logging);
 
-        final Retrofit retrofit = new Retrofit.Builder()
+        oAuth2Service = new OAuth2Service.Builder(new Retrofit.Builder())
                 .baseUrl("https://api.twitter.com")
+                .authentication("vp3R3eeSvXcYAJLot3TJOE1SJ", "qqI5GFRqJCnHFiIaK10gyVqDhrvGftZFUNIfO7bWGiSvhIyoM0")
                 .client(okHttpClient)
                 .build();
-
-        oAuth2Service = retrofit.create(OAuth2Service.class);
     }
 
     @Test
     public void requestToken() throws Exception {
+        String consumerKeyEncoded = URLEncoder.encode("vp3R3eeSvXcYAJLot3TJOE1SJ");
+        String consumerSecretEncoded = URLEncoder.encode("qqI5GFRqJCnHFiIaK10gyVqDhrvGftZFUNIfO7bWGiSvhIyoM0");
+        String credential = Credentials.basic(consumerKeyEncoded, consumerSecretEncoded);
 
-        Call<ResponseBody> call = oAuth2Service.requestToken(
-                "OAuth oauth_consumer_key=\"vp3R3eeSvXcYAJLot3TJOE1SJ\", oauth_nonce=\"2bc2f97bbb4ff9bc7893b74c00fe8897\", oauth_signature=\"P6L4zb8t1QuOTcjTwQ%2BwtvU2d1k%3D\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"1450456328\", oauth_version=\"1.0\"",
-                "client_credentials");
+        Call<TokenResponse> call = oAuth2Service.requestToken("client_credentials");
+        Response<TokenResponse> response = call.execute();
 
-        int statusCode = call.execute().code();
-
-        assertEquals(statusCode, 200);
+        assertEquals(response.code(), 200);
+        assertTrue(response.body() != null);
+        assertTrue(!response.body().access_token.isEmpty());
+        assertTrue(response.body().token_type.equals("bearer"));
     }
 }
