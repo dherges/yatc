@@ -1,9 +1,10 @@
 package com.twitter.contrib.yatc.http.oauth;
 
 
-import com.squareup.okhttp.Credentials;
+import com.squareup.moshi.Moshi;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;
+import com.twitter.contrib.yatc.dagger.modules.TwitterModule;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +13,6 @@ import java.net.URLEncoder;
 
 import retrofit.Call;
 import retrofit.Response;
-import retrofit.Retrofit;
 
 import static org.junit.Assert.*;
 
@@ -28,19 +28,12 @@ public class OAuth2ServiceTest {
         logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
         okHttpClient.networkInterceptors().add(logging);
 
-        oAuth2Service = new OAuth2Service.Builder(new Retrofit.Builder())
-                .baseUrl("https://api.twitter.com")
-                .authentication("vp3R3eeSvXcYAJLot3TJOE1SJ", "qqI5GFRqJCnHFiIaK10gyVqDhrvGftZFUNIfO7bWGiSvhIyoM0")
-                .client(okHttpClient)
-                .build();
+        oAuth2Service = new TwitterModule()
+                .provideOAuth2Service(okHttpClient, new Moshi.Builder().build());
     }
 
     @Test
     public void requestToken() throws Exception {
-        String consumerKeyEncoded = URLEncoder.encode("vp3R3eeSvXcYAJLot3TJOE1SJ");
-        String consumerSecretEncoded = URLEncoder.encode("qqI5GFRqJCnHFiIaK10gyVqDhrvGftZFUNIfO7bWGiSvhIyoM0");
-        String credential = Credentials.basic(consumerKeyEncoded, consumerSecretEncoded);
-
         Call<TokenResponse> call = oAuth2Service.requestToken("client_credentials");
         Response<TokenResponse> response = call.execute();
 

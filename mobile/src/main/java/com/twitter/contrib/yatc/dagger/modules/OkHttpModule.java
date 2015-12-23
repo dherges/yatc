@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import retrofit.MoshiConverterFactory;
 
 @Module
 public class OkHttpModule {
