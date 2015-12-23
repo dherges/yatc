@@ -23,14 +23,14 @@ public class TwitterModule {
     @Provides
     @Singleton
     public OAuth2Service provideOAuth2Service (OkHttpClient okHttpClient, Moshi moshi) {
-        final OkHttpClient okHttpClient1 = okHttpClient.clone();
-        okHttpClient1.networkInterceptors()
+        final OkHttpClient twitterAppClient = okHttpClient.clone();
+        twitterAppClient.networkInterceptors()
                 .add(new BasicAuthenticationInterceptor(Config.CONSUMER_KEY, Config.CONSUMER_SECRET));
 
         return new Retrofit.Builder()
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .baseUrl(Config.BASE_URL)
-                .client(okHttpClient1)
+                .client(twitterAppClient)
                 .build()
                 .create(OAuth2Service.class);
     }
