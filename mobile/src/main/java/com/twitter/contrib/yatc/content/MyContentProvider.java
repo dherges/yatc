@@ -8,7 +8,7 @@ public class MyContentProvider extends CupboardContentProvider {
     private static final String DB_NAME = "content.db";
     private static final int DB_VERSION = 1;
 
-    protected MyContentProvider() {
+    public MyContentProvider() {
         super(AUTHORITY, DB_NAME, DB_VERSION);
     }
 }
