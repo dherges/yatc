@@ -10,7 +10,7 @@ import java.net.URLEncoder;
 public interface OAuth {
 
     String CALLBACK = "oauth_callback";
-    String CALLBACK_CONFIRMED = "oauth_callback";
+    String CALLBACK_CONFIRMED = "oauth_callback_confirmed";
     String CONSUMER_KEY = "oauth_consumer_key";
     String NONCE = "oauth_nonce";
     String SCREEN_NAME = "screen_name";

@@ -47,6 +47,7 @@ public class TwitterApiIntegrationTest {
         assertThat(response.code()).isEqualTo(200);
         assertThat(oAuthResponse.token()).isNotEmpty();
         assertThat(oAuthResponse.tokenSecret()).isNotEmpty();
+        assertThat(oAuthResponse.callbackConfirmed()).isTrue();
     }
 
     @Test
