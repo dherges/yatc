@@ -68,7 +68,7 @@ public class RequestSigner {
     public OAuthRequest signRequest(OAuthRequest request) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         final OAuthRequest.Builder signedRequest = request.newBuilder();
 
-        // Build oauth_* params
+        // Build oauth_* params, need to percent encode all the values
         final Map<String, String> oAuthParams = new HashMap<>(request.oauth());
         oAuthParams.put(OAuth.CONSUMER_KEY, consumerKey);
         oAuthParams.put(OAuth.NONCE, nonce.create());
@@ -80,7 +80,10 @@ public class RequestSigner {
         oAuthParams.put(OAuth.VERSION, OAuth.VERSION_VALUE_10);
 
         // Create oauth_signature
-        final SortedMap<String, String> signingParams = new TreeMap<>(oAuthParams);
+        final SortedMap<String, String> signingParams = new TreeMap<>();
+        for (String key : oAuthParams.keySet()) {
+            signingParams.put(key, OAuth.Encoder.encode(oAuthParams.get(key)));
+        }
         signingParams.putAll(request.query());
         signingParams.putAll(request.body());
 

@@ -10,12 +10,15 @@ import java.net.URLEncoder;
 public interface OAuth {
 
     String CALLBACK = "oauth_callback";
+    String CALLBACK_CONFIRMED = "oauth_callback";
     String CONSUMER_KEY = "oauth_consumer_key";
     String NONCE = "oauth_nonce";
+    String SCREEN_NAME = "screen_name";
     String SIGNATURE = "oauth_signature";
     String SIGNATURE_METHOD = "oauth_signature_method";
     String TIMESTAMP = "oauth_timestamp";
     String TOKEN = "oauth_token";
+    String TOKEN_SECRET = "oauth_token_secret";
     String VERIFIER = "oauth_verifier";
     String VERSION = "oauth_version";
 

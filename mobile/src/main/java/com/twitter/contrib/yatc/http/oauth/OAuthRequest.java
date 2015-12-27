@@ -1,5 +1,6 @@
 package com.twitter.contrib.yatc.http.oauth;
 
+import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
@@ -35,7 +36,7 @@ public class OAuthRequest {
         this.original = b.request;
 
         this.oAuthParams = b.oauth;
-        this.bodyParams = Collections.unmodifiableMap(extractBodyParams(b.request));
+        this.bodyParams = Collections.unmodifiableMap(extractBodyParams(b.request.body()));
         this.queryParams = Collections.unmodifiableMap(extractQueryParams(b.request));
     }
 
@@ -104,6 +105,14 @@ public class OAuthRequest {
             return this;
         }
 
+        public Builder requestToken(String verb, String url, String callback) {
+            this.verb = verb;
+            this.url = url;
+            oauth.put(OAuth.CALLBACK, callback);
+
+            return this;
+        }
+
         public Builder param(String key, String value) {
             oauth.put(key, value);
 
@@ -117,30 +126,56 @@ public class OAuthRequest {
         }
 
         public OAuthRequest build() {
+            if (request == null) {
+                Request.Builder rb = new Request.Builder()
+                        .url(url);
+
+                boolean needsBody = (verb != null && verb.equals("POST"))
+                        || (oauth.containsKey(OAuth.VERIFIER))
+                        || (oauth.containsKey(OAuth.CALLBACK));
+                if (needsBody) {
+                    FormEncodingBuilder body = new FormEncodingBuilder();
+
+                    String verifier = oauth.remove(OAuth.VERIFIER);
+                    if (verifier != null) {
+                        body.add(OAuth.VERIFIER, verifier);
+                    }
+
+                    /*
+                    String callback = oauth.remove(OAuth.CALLBACK);
+                    if (callback != null) {
+                        body.add(OAuth.CALLBACK, callback);
+                    }*/
+
+                    rb.method((verb != null) ? verb : request.method(), body.build());
+                }
+
+                request = rb.build();
+            }
+
             return new OAuthRequest(this);
         }
     }
 
 
-    static Map<String, String> extractBodyParams(Request request) {
+    static Map<String, String> extractBodyParams(RequestBody body) {
         // extract form-encoded HTTP body params
-        final RequestBody requestBody = request.body();
         final Map<String, String> bodyParams = new HashMap<>();
-        if (requestBody != null && requestBody.contentType().equals(FORM_CONTENT_TYPE)) {
-            final Buffer body = new Buffer();
+        if (body != null && body.contentType().equals(FORM_CONTENT_TYPE)) {
+            final Buffer buffer = new Buffer();
             try {
-                requestBody.writeTo(body);
+                body.writeTo(buffer);
 
-                while (!body.exhausted()) {
-                    long keyEnd = body.indexOf((byte) '=');
+                while (!buffer.exhausted()) {
+                    long keyEnd = buffer.indexOf((byte) '=');
                     if (keyEnd == -1)
-                        throw new IllegalStateException("Key with no value: " + body.readUtf8());
-                    String key = body.readUtf8(keyEnd);
-                    body.skip(1); // Equals.
+                        throw new IllegalStateException("Key with no value: " + buffer.readUtf8());
+                    String key = buffer.readUtf8(keyEnd);
+                    buffer.skip(1); // Equals.
 
-                    long valueEnd = body.indexOf((byte) '&');
-                    String value = valueEnd == -1 ? body.readUtf8() : body.readUtf8(valueEnd);
-                    if (valueEnd != -1) body.skip(1); // Ampersand.
+                    long valueEnd = buffer.indexOf((byte) '&');
+                    String value = valueEnd == -1 ? buffer.readUtf8() : buffer.readUtf8(valueEnd);
+                    if (valueEnd != -1) buffer.skip(1); // Ampersand.
 
                     bodyParams.put(key, value);
                 }
