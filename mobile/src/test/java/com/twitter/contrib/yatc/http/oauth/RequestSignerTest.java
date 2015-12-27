@@ -49,24 +49,32 @@ public class RequestSignerTest {
 
     @Test
     public void testSignRequest() throws Exception {
-        RequestBody body = new FormEncodingBuilder()
-                .add("status", "Hello Ladies + Gentlemen, a signed OAuth request!")
-                .build();
-
-        Request request = new Request.Builder()
+        final Request request = new Request.Builder()
                 .url("https://api.twitter.com/1/statuses/update.json?include_entities=true")
-                .post(body)
+                .post(new FormEncodingBuilder()
+                        .add("status", "Hello Ladies + Gentlemen, a signed OAuth request!")
+                        .build())
                 .build();
 
-        OAuthRequest result = signer.signRequest(new OAuthRequest.Builder().request(request).build());
+        final OAuthRequest oAuthRequest = new OAuthRequest.Builder()
+                .request(request)
+                .build();
 
-        assertThat(result).isNotNull();
+        final OAuthRequest signed = signer.signRequest(oAuthRequest);
 
-        assertThat(result.oauth().get("oauth_signature"))
+        assertThat(signed).isNotNull();
+
+        assertThat(signed.oauth().get("oauth_signature"))
                 .isEqualTo("tnnArxj06cWHq44gCs1OSKk/jLY=");
 
-        assertThat(result.auth())
-                .isEqualTo("OAuth oauth_consumer_key=\"xvz1evFS4wEEPTGEFPHBog\", oauth_nonce=\"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg\", oauth_signature=\"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"1318622958\", oauth_token=\"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb\", oauth_version=\"1.0\"");
+        assertThat(signed.auth())
+                .isEqualTo("OAuth oauth_consumer_key=\"xvz1evFS4wEEPTGEFPHBog\""
+                             + ", oauth_nonce=\"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg\""
+                             + ", oauth_signature=\"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D\""
+                             + ", oauth_signature_method=\"HMAC-SHA1\""
+                             + ", oauth_timestamp=\"1318622958\""
+                             + ", oauth_token=\"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb\""
+                             + ", oauth_version=\"1.0\"");
 
     }
 
