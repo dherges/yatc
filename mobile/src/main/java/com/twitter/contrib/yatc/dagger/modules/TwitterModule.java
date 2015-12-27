@@ -3,7 +3,7 @@ package com.twitter.contrib.yatc.dagger.modules;
 import com.squareup.moshi.Moshi;
 import com.squareup.okhttp.OkHttpClient;
 import com.twitter.contrib.yatc.http.BasicAuthenticationInterceptor;
-import com.twitter.contrib.yatc.http.oauth.OAuth2Service;
+import com.twitter.contrib.yatc.http.oauth2.OAuth2Service;
 
 import javax.inject.Singleton;
 

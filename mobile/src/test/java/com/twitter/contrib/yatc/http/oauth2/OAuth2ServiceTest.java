@@ -1,4 +1,4 @@
-package com.twitter.contrib.yatc.http.oauth;
+package com.twitter.contrib.yatc.http.oauth2;
 
 
 import com.squareup.moshi.Moshi;
@@ -8,8 +8,6 @@ import com.twitter.contrib.yatc.dagger.modules.TwitterModule;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import java.net.URLEncoder;
 
 import retrofit.Call;
 import retrofit.Response;
@@ -34,7 +32,7 @@ public class OAuth2ServiceTest {
 
     @Test
     public void requestToken() throws Exception {
-        Call<TokenResponse> call = oAuth2Service.requestToken("client_credentials");
+        Call<TokenResponse> call = oAuth2Service.obtainToken("client_credentials");
         Response<TokenResponse> response = call.execute();
 
         assertEquals(response.code(), 200);

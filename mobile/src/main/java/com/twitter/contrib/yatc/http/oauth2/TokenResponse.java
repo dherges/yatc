@@ -1,4 +1,4 @@
-package com.twitter.contrib.yatc.http.oauth;
+package com.twitter.contrib.yatc.http.oauth2;
 
 public class TokenResponse {
 
