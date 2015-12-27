@@ -58,11 +58,11 @@ public class RequestSignerTest {
                 .post(body)
                 .build();
 
-        OAuthRequest result = signer.signRequest(new OAuthRequest(request));
+        OAuthRequest result = signer.signRequest(new OAuthRequest.Builder().request(request).build());
 
         assertThat(result).isNotNull();
 
-        assertThat(result.params().get("oauth_signature"))
+        assertThat(result.oauth().get("oauth_signature"))
                 .isEqualTo("tnnArxj06cWHq44gCs1OSKk/jLY=");
 
         assertThat(result.auth())

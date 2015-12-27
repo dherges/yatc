@@ -1,14 +1,11 @@
 package com.twitter.contrib.yatc.http.oauth;
 
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -25,8 +22,6 @@ import okio.ByteString;
  * @link https://dev.twitter.com/oauth/overview/creating-signatures
  */
 public class RequestSigner {
-    private static final MediaType FORM_CONTENT_TYPE =
-            MediaType.parse("application/x-www-form-urlencoded");
     private static final String SIGNATURE_TYPE = "HmacSHA1";
 
 
@@ -47,7 +42,7 @@ public class RequestSigner {
      * Initializes the key that is used for creating signatures.
      *
      * @param consumerSecret An OAuth consumer key
-     * @param tokenSecret An OAuth token secret, obtained from either the request token or access token; may be null
+     * @param tokenSecret An OAuth token secret, obtained from either the original token or access token; may be null
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
@@ -71,29 +66,29 @@ public class RequestSigner {
      * @return Signed request with "oauth_*" parameters
      */
     public OAuthRequest signRequest(OAuthRequest request) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-        final OAuthRequest signedRequest = new OAuthRequest(request.request());
-        signedRequest.params().putAll(request.params());
+        final OAuthRequest.Builder signedRequest = request.newBuilder();
 
-        // Collect oauth_* params
-        signedRequest.params().put(OAuth.CONSUMER_KEY, consumerKey);
-        signedRequest.params().put(OAuth.NONCE, nonce.create());
-        signedRequest.params().put(OAuth.SIGNATURE_METHOD, OAuth.SIGNATURE_METHOD_VALUE_HMAC_SHA1);
-        signedRequest.params().put(OAuth.TIMESTAMP, "" + timestamp.create());
+        // Build oauth_* params
+        final Map<String, String> oAuthParams = new HashMap<>(request.oauth());
+        oAuthParams.put(OAuth.CONSUMER_KEY, consumerKey);
+        oAuthParams.put(OAuth.NONCE, nonce.create());
+        oAuthParams.put(OAuth.SIGNATURE_METHOD, OAuth.SIGNATURE_METHOD_VALUE_HMAC_SHA1);
+        oAuthParams.put(OAuth.TIMESTAMP, "" + timestamp.create());
         if (tokenValue != null && tokenValue.length() > 0) {
-            signedRequest.params().put(OAuth.TOKEN, tokenValue);
+            oAuthParams.put(OAuth.TOKEN, tokenValue);
         }
-        signedRequest.params().put(OAuth.VERSION, OAuth.VERSION_VALUE_10);
+        oAuthParams.put(OAuth.VERSION, OAuth.VERSION_VALUE_10);
 
         // Create oauth_signature
-        final String requestMethod = signedRequest.request().method();
-        final HttpUrl requestUrl = signedRequest.request().httpUrl();
-        final String baseUrl = requestUrl.newBuilder().query(null).fragment(null).build().toString();
-        final SortedMap<String, String> signingParams = collectSignatureParameters(signedRequest.request(), signedRequest.params());
+        final SortedMap<String, String> signingParams = new TreeMap<>(oAuthParams);
+        signingParams.putAll(request.query());
+        signingParams.putAll(request.body());
 
-        final String signature = signatureOf(requestMethod, baseUrl, signingParams);
-        signedRequest.params().put(OAuth.SIGNATURE, signature);
+        final String signature = signatureOf(request.verb(), request.url(), signingParams);
+        oAuthParams.put(OAuth.SIGNATURE, signature);
+        signedRequest.params(oAuthParams);
 
-        return signedRequest;
+        return signedRequest.build();
     }
 
     private String signatureOf(String requestMethod, String baseUrl, SortedMap<String, String> signatureParams)
@@ -125,85 +120,6 @@ public class RequestSigner {
         return signature.base64();
     }
 
-    private static SortedMap<String, String> collectSignatureParameters(Request request, SortedMap<String, String> oAuthParams)
-            throws IOException {
-
-        // copy over the initial oauth_* params
-        final SortedMap<String, String> encodedSignatureParams = new TreeMap<>(oAuthParams);
-
-        // append HTTP query params
-        final HttpUrl url = request.httpUrl();
-        for (int i = 0, len = url.querySize(); i < len; i++) {
-            final String key = OAuth.Encoder.encode(url.queryParameterName(i)); // decode(..) ??
-            final String value = OAuth.Encoder.encode(url.queryParameterValue(i)); // decode(..) ??
-
-            encodedSignatureParams.put(key, value);
-        }
-
-        final RequestBody requestBody = request.body();
-        if (requestBody.contentType().equals(FORM_CONTENT_TYPE)) {
-            final Buffer body = new Buffer();
-            requestBody.writeTo(body);
-
-            while (!body.exhausted()) {
-                long keyEnd = body.indexOf((byte) '=');
-                if (keyEnd == -1) throw new IllegalStateException("Key with no value: " + body.readUtf8());
-                String key = body.readUtf8(keyEnd);
-                body.skip(1); // Equals.
-
-                long valueEnd = body.indexOf((byte) '&');
-                String value = valueEnd == -1 ? body.readUtf8() : body.readUtf8(valueEnd);
-                if (valueEnd != -1) body.skip(1); // Ampersand.
-
-                encodedSignatureParams.put(key, value); // decode(..) ???
-            }
-        }
-
-        return encodedSignatureParams;
-    }
-
-
-    public static class DefaultConsumer implements OAuth.Consumer {
-
-        private final String key;
-        private final String secret;
-
-        public DefaultConsumer(String key, String secret) {
-            this.key = key;
-            this.secret = secret;
-        }
-
-        @Override
-        public String key() {
-            return key;
-        }
-
-        @Override
-        public String secret() {
-            return secret;
-        }
-    }
-
-    public static class DefaultToken implements OAuth.Token {
-
-        private final String token;
-        private final String secret;
-
-        public DefaultToken(String token, String secret) {
-            this.token = token;
-            this.secret = secret;
-        }
-
-        @Override
-        public String value() {
-            return token;
-        }
-
-        @Override
-        public String secret() {
-            return secret;
-        }
-    }
 
     public static class DefaultNonceGenerator implements OAuth.NonceGenerator {
 
@@ -211,7 +127,7 @@ public class RequestSigner {
             byte[] b = new byte[32];
             new Random().nextBytes(b);
 
-            return ByteString.of(b).base64();
+            return ByteString.of(b).hex();
         }
     }
 
@@ -221,7 +137,6 @@ public class RequestSigner {
             return System.currentTimeMillis() / 1000L;
         }
     }
-
 
     public static class Builder {
         private String consumerKey;
