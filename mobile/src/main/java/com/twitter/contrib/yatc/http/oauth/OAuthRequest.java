@@ -130,9 +130,7 @@ public class OAuthRequest {
                 Request.Builder rb = new Request.Builder()
                         .url(url);
 
-                boolean needsBody = (verb != null && verb.equals("POST"))
-                        || (oauth.containsKey(OAuth.VERIFIER))
-                        || (oauth.containsKey(OAuth.CALLBACK));
+                boolean needsBody = (verb != null && verb.equals("POST")) || (oauth.containsKey(OAuth.VERIFIER));
                 if (needsBody) {
                     FormEncodingBuilder body = new FormEncodingBuilder();
 
@@ -140,12 +138,6 @@ public class OAuthRequest {
                     if (verifier != null) {
                         body.add(OAuth.VERIFIER, verifier);
                     }
-
-                    /*
-                    String callback = oauth.remove(OAuth.CALLBACK);
-                    if (callback != null) {
-                        body.add(OAuth.CALLBACK, callback);
-                    }*/
 
                     rb.method((verb != null) ? verb : request.method(), body.build());
                 }

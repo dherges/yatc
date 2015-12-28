@@ -42,7 +42,7 @@ public class RequestSigner {
      * Initializes the key that is used for creating signatures.
      *
      * @param consumerSecret An OAuth consumer key
-     * @param tokenSecret An OAuth token secret, obtained from either the original token or access token; may be null
+     * @param tokenSecret An OAuth token secret, obtained from either the request token or access token; may be null
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
